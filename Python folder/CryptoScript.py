@@ -8,28 +8,27 @@ NOTION_TOKEN = "secret_gjCp3sHvEFej1BCt7M75uI720jEXsooWt88KgzgoFeT"
 DATABASE_ID = "85bae205522d43b880bb8f2761c7dd81"
 cm_secret = "10ea5ef2-9112-493f-bca4-a62cf9751b73"
 
-
 headers = {
     "Authorization": "Bearer " + NOTION_TOKEN,
     "Content-Type": "application/json",
     "Notion-Version": "2022-06-28",
 }
 
+headers_cm = {
+    'Accepts': 'application/json',
+    'X-CMC_PRO_API_KEY': cm_secret,
+}
+
 url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
+url_cm = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?id='
 
 crypto_list = [1, 1027, 3635, 1839, 6636, 4172, 5426, 5805,
                1556, 2694, 5804, 4705, 6210, 4195, 1975, 3794, 20947]
 demo = [1, 1027]
 
-url_cm = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?id='
 
 crypto_str = ','.join(map(str, demo))
 full_url = url_cm + crypto_str
-
-headers_cm = {
-    'Accepts': 'application/json',
-    'X-CMC_PRO_API_KEY': cm_secret,
-}
 
 
 def create_page(data: dict):
@@ -124,7 +123,8 @@ def get_databse_formatted():
 
 def update_pages():
     pages = get_pages()
-
+    res = requests.get(full_url, headers=headers_cm)
+    data2 = json.loads(res.text)
     for page in pages:
         crypto_id = page["properties"]["Code"]["number"]
         # print("3333333333333333333333333333333" + str(page))
@@ -146,5 +146,5 @@ def update_pages():
 
 
 # get_databse_formatted()
-post_pages(demo)
-# update_pages()
+# post_pages(demo)
+update_pages()
