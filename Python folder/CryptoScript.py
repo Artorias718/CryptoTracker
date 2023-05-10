@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime, timezone
 import json
+from notion_client import Client
 
 
 NOTION_TOKEN = "secret_gjCp3sHvEFej1BCt7M75uI720jEXsooWt88KgzgoFeT"
@@ -16,6 +17,20 @@ headers = {
 
 url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
 
+crypto_list = [1, 1027, 3635, 1839, 6636, 4172, 5426, 5805,
+               1556, 2694, 5804, 4705, 6210, 4195, 1975, 3794, 20947]
+demo = [1, 1027]
+
+url_cm = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?id='
+
+crypto_str = ','.join(map(str, demo))
+full_url = url_cm + crypto_str
+
+headers_cm = {
+    'Accepts': 'application/json',
+    'X-CMC_PRO_API_KEY': cm_secret,
+}
+
 
 def create_page(data: dict):
     create_url = "https://api.notion.com/v1/pages"
@@ -24,6 +39,22 @@ def create_page(data: dict):
 
     res = requests.post(create_url, headers=headers, json=payload)
     print(res.status_code)
+    return res
+
+    url = f"https://api.notion.com/v1/pages/{page_id}"
+
+    payload = {"properties": data}
+
+    res = requests.patch(url, json=payload, headers=headers)
+    return res
+
+
+def update_page(page_id: str, data: dict):
+    url = f"https://api.notion.com/v1/pages/{page_id}"
+
+    payload = {"properties": data}
+
+    res = requests.patch(url, json=payload, headers=headers)
     return res
 
 
@@ -59,43 +90,61 @@ def stamp_pages(pages):
         print(url, title, published)
 
 
-def get_cm_prices():
-    print()
+def post_pages(crypto_list):
+    res = requests.get(full_url, headers=headers_cm)
+    data2 = json.loads(res.text)
+
+    for id in crypto_list:
+
+        data_post = {
+            "Code": {"number": id},
+            "Crypto": {"title": [{"text": {"content": data2["data"][str(id)]["name"]}}]},
+            "Price": {"number": data2["data"][str(id)]["quote"]["USD"]["price"]},
+            "Symbol": {"rich_text": [{"text": {"content": data2["data"][str(id)]["symbol"]}}]},
+            "Icon": {"files": [{
+                "name": "https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png",
+                "type": "external",
+                "external": {"url": f"https://s2.coinmarketcap.com/static/img/coins/64x64/{str(id)}.png"}}]}
+
+        }
+        create_page(data_post)
 
 
-title = "Test Title"
-description = "Test Description"
-published_date = datetime.now().astimezone(timezone.utc).isoformat()
-data = {
-    "URL": {"title": [{"text": {"content": description}}]},
-    "Title22": {"rich_text": [{"text": {"content": title}}]},
-    "Published": {"date": {"start": published_date, "end": None}}
-}
+def get_databse_formatted():
+
+    client = Client(auth="secret_gjCp3sHvEFej1BCt7M75uI720jEXsooWt88KgzgoFeT")
+    results = client.databases.query(
+        **{
+            "database_id": DATABASE_ID,
+        }
+    ).get("results")
+
+    print(results)
+
+
+def update_pages():
+    pages = get_pages()
+
+    for page in pages:
+        crypto_id = page["properties"]["Code"]["number"]
+        # print("3333333333333333333333333333333" + str(page))
+
+        data_post = {
+            "Price": {"number": data2["data"][str(crypto_id)]["quote"]["USD"]["price"]}
+        }
+
+        update_page(page["id"], data_post)
+
 
 # create_page(data)
 # stamp_pages(pages=get_pages())
-crypto_list = [1, 1027, 3635, 1839, 6636, 4172, 5426, 5805,
-               1556, 2694, 5804, 4705, 6210, 4195, 1975, 3794, 20947]
 
-url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?id='
-crypto_str = ','.join(map(str, crypto_list))
-full_url = url + crypto_str
 
-headers_cm = {
-    'Accepts': 'application/json',
-    'X-CMC_PRO_API_KEY': cm_secret,
-}
-res = requests.get(full_url, headers=headers_cm)
-data2 = json.loads(res.text)
+# Nome         data2["data"][str(id)]["name"]
+# Price        data["data"][str(id)]["quote"]["USD"]["price"]
+# Symbol       data2["data"][str(id)]["symbol"]
 
-for id in crypto_list:
 
-    data_post = {
-        "URL": {"title": [{"text": {"content": data2["data"][str(id)]["name"]}}]},
-        "Title22": {"rich_text": [{"text": {"content": str(data2["data"][str(id)]["quote"]["USD"]["price"])}}]},
-        "Published": {"date": {"start": published_date, "end": None}}
-    }
-    create_page(data_post)
-
-# print(data["data"][str(id)]["name"], "  :  ",
-# data["data"][str(id)]["quote"]["USD"]["price"])
+# get_databse_formatted()
+post_pages(demo)
+# update_pages()
