@@ -27,10 +27,6 @@ crypto_list = [1, 1027, 3635, 1839, 6636, 4172, 5426, 5805,
 demo = [1, 1027]
 
 
-crypto_str = ','.join(map(str, demo))
-full_url = url_cm + crypto_str
-
-
 def create_page(data: dict):
     create_url = "https://api.notion.com/v1/pages"
 
@@ -90,6 +86,8 @@ def stamp_pages(pages):
 
 
 def post_pages(crypto_list):
+    crypto_str = ','.join(map(str, crypto_list))
+    full_url = url_cm + crypto_str
     res = requests.get(full_url, headers=headers_cm)
     data2 = json.loads(res.text)
 
@@ -123,6 +121,8 @@ def get_databse_formatted():
 
 def update_pages():
     pages = get_pages()
+    crypto_str = ','.join(map(str, crypto_list))
+    full_url = url_cm + crypto_str
     res = requests.get(full_url, headers=headers_cm)
     data2 = json.loads(res.text)
     for page in pages:
@@ -146,5 +146,5 @@ def update_pages():
 
 
 # get_databse_formatted()
-# post_pages(demo)
-update_pages()
+post_pages(crypto_list)
+# update_pages()
