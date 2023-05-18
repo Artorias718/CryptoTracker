@@ -2,6 +2,7 @@ import requests
 from datetime import datetime, timezone
 import json
 from notion_client import Client
+import matplotlib.pyplot as plt
 
 
 NOTION_TOKEN = "secret_gjCp3sHvEFej1BCt7M75uI720jEXsooWt88KgzgoFeT"
@@ -24,7 +25,7 @@ url_cm = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?id='
 
 crypto_list = [1, 1027, 3635, 1839, 6636, 4172, 5426, 5805,
                1556, 2694, 5804, 4705, 6210, 4195, 1975, 3794, 20947]
-demo = [1, 1027]
+demo = [20314]
 
 
 def create_page(data: dict):
@@ -121,13 +122,18 @@ def get_databse_formatted():
 
 def update_pages():
     pages = get_pages()
-    crypto_str = ','.join(map(str, crypto_list))
+    crypto_in_pages = []
+    for page in pages:
+        crypto_in_pages.append(page["properties"]["Code"]["number"])
+
+    crypto_str = ','.join(map(str, crypto_in_pages))
     full_url = url_cm + crypto_str
     res = requests.get(full_url, headers=headers_cm)
     data2 = json.loads(res.text)
     for page in pages:
         crypto_id = page["properties"]["Code"]["number"]
         # print("3333333333333333333333333333333" + str(page))
+        # print(data2)
 
         data_post = {
             "Price": {"number": data2["data"][str(crypto_id)]["quote"]["USD"]["price"]}
@@ -146,5 +152,29 @@ def update_pages():
 
 
 # get_databse_formatted()
-post_pages(crypto_list)
-# update_pages()
+# post_pages(demo)
+update_pages()
+"""
+pages = get_pages()
+amounts = []
+symbols = []
+
+
+for page in pages:
+
+    amount = page["properties"]["Total"]["formula"]["number"]
+    symbol = page["properties"]["Symbol"]["rich_text"][0]["text"]["content"]
+    amounts.append(amount)
+    symbols.append(symbol)
+
+x = symbols
+y = amounts
+plt.pie(
+    y,
+    labels=x,
+    autopct="%1.1f%%",
+    startangle=90,
+    pctdistance=0.85,
+    textprops={"fontsize": 10},
+)
+plt.show()"""
